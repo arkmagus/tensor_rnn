@@ -90,5 +90,5 @@ ENV/
 .ropeproject
 
 # CUSTOM
-.pickle
-.log
+*.pickle
+*.log
