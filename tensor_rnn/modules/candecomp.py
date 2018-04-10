@@ -2,6 +2,7 @@ import math
 import numpy as np
 
 import torch
+from torch import nn
 from torch.nn import Module, Parameter, ParameterList
 from torch.nn import functional as F
 from torch.nn import init
@@ -11,6 +12,14 @@ def _create_candecomp_cores(in_modes, out_modes, order) :
     assert order > 0
     list_cores = []
     modes = in_modes + out_modes # extend list
+    for mm in modes :
+        list_cores.append(Parameter(torch.Tensor(mm, order).zero_()))
+    list_cores = ParameterList(list_cores)
+    return list_cores
+
+def _create_candecomp_cores_unconstrained(tensor_modes, order) :
+    list_cores = []
+    modes = tensor_modes
     for mm in modes :
         list_cores.append(Parameter(torch.Tensor(mm, order).zero_()))
     list_cores = ParameterList(list_cores)
@@ -80,3 +89,39 @@ class CPLinear(Module) :
 
     def forward(self, input) :
         return F.linear(input, self.W_linear.t(), self.bias)
+
+class CPBilinear(Module) :
+    def __init__(self, in1_features, in2_features, out_features, order, bias=True) :
+        """
+        order: rank for each factor matrix (order << out_features to maximize parameter efficiency)
+        """
+        super().__init__()
+        self.in1_features = in1_features
+        self.in2_features = in2_features
+        self.out_features = out_features
+        self.order = order
+        self.factors = _create_candecomp_cores_unconstrained([out_features, in1_features, in2_features], order)
+        
+        if bias :
+            self.bias = Parameter(torch.Tensor(out_features))
+        else :
+            self.register_parameter('bias', None)
+        self.reset_parameters()
+        pass
+
+    def reset_parameters(self) :
+        CONST = (0.05 / (self.order**0.5)) ** (1.0/3.0) # based on the theorem derived in latest paper
+        for ii in range(len(self.factors)) :
+            init.normal(self.factors[ii], 0, CONST)
+            pass
+        if self.bias is not None :
+            self.bias.data.zero_()
+
+    @property
+    def weight(self) :
+        return _cpcores_to_tensor(list(self.factors))
+
+    def forward(self, input1, input2) :
+        return F.bilinear(input1, input2, self.weight, self.bias)
+
+    pass
