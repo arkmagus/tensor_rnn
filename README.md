@@ -24,6 +24,11 @@ For the usage, see the code inside `example/polymusic/poly_allrnn.py`
 * `TuckerLinear `
 * `CPLinear`
 * `TTLinear`
+
+### Bilinear Layer
+* `CPBilinear`
+* `TuckerBilinear` (TODO)
+
 ### RNN Layer
 * `StatefulCPLSTMCell`
 * `StatefulCPGRUCell`
