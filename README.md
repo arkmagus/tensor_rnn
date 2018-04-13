@@ -20,9 +20,11 @@ An implementation of various tensor-based decomposition for NN & RNN parameters
 
 For the usage, see the code inside `example/polymusic/poly_allrnn.py`
 ## Modules
+### Linear Layer
 * `TuckerLinear `
 * `CPLinear`
 * `TTLinear`
+### RNN Layer
 * `StatefulCPLSTMCell`
 * `StatefulCPGRUCell`
 * `StatefulTuckerLSTMCell`
